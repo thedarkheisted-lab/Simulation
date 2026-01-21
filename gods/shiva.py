@@ -3,13 +3,17 @@ import random
 from gods.brahma import get_priority_score
 
 class Shiva:
-    def __init__(self):
+    def __init__(self, logger = print):
         self.name = "Shiva"
         self.cooldown = 0
         self.divine_energy = 90.0
         self.interventions = 0
         self.total_decay_inflicted = 0.0
         self.cost_multiplier = 1.0
+        self.logger = logger
+
+    def log(self, message):
+        self.logger(message)
 
     def influence_battle(self, c1, c2):
         if self.cooldown > 0 or self.divine_energy <= 0:
@@ -28,5 +32,5 @@ class Shiva:
         self.divine_energy -= cost
         self.interventions += 1
 
-        print(f"{self.name} inflicts decay on {target.name}: -{decay:.1f} HP (Cost: {cost:.1f} energy)")
+        self.log(f"{self.name} inflicts decay on {target.name}: -{decay:.1f} HP (Cost: {cost:.1f} energy)")
         self.cooldown = random.randint(1, 3)

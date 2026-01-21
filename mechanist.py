@@ -17,7 +17,7 @@ class Mechanist(Entity):
             "evasion": 0.1,
             "critical_chance": 0.0  # No drama, just math
         })
-        super().__init__(name, config={"logger": logger})
+        super().__init__(name, config=config, logger= logger)
         self.overclocked = True
         self.charge = 0
 

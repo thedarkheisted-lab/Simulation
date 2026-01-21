@@ -9,13 +9,17 @@ def get_priority_score(entity):
     return danger_score + (karma_weight * 0.5) + critical_bonus
 
 class Brahma:
-    def __init__(self):
+    def __init__(self, logger=print):
         self.name = "Brahma"
         self.cooldown = 0
         self.divine_energy = 100.0
         self.interventions = 0
         self.total_health_restored = 0.0
         self.cost_multiplier = 1.0
+        self.logger = logger
+
+    def log(self, message):
+        self.logger(message)
 
     def influence_battle(self, c1, c2):
         if self.cooldown > 0 or self.divine_energy <= 0:
@@ -27,7 +31,7 @@ class Brahma:
         target, score = priorities[0]
 
         if score < 0.4:
-            print(f"{self.name} finds no mortal worthy of aid.")
+            self.log(f"{self.name} finds no mortal worthy of aid.")
             return
 
         heal_amt = 20 + random.uniform(-5, 5)
@@ -40,5 +44,5 @@ class Brahma:
         self.total_health_restored += actual_heal
         self.interventions += 1
 
-        print(f"{self.name} heals {target.name} for {actual_heal:.1f} HP. (Cost: {cost:.1f} energy)")
+        self.log(f"{self.name} heals {target.name} for {actual_heal:.1f} HP. (Cost: {cost:.1f} energy)")
         self.cooldown = random.randint(1, 3)

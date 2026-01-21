@@ -58,7 +58,7 @@ class TemporalFlux(BaseCosmicEvent):
         e2.recover_stamina(10)
 
 class CosmicEvent:
-    def __init__(self):
+    def __init__(self, logger = print):
         self.events = [
             CelestialAlignment(),
             CosmicDrought(),
@@ -66,13 +66,14 @@ class CosmicEvent:
             AstralSurge(),
             TemporalFlux()
         ]
+        self.logger = logger
 
     def apply_event(self, e1, e2, brahma, vishnu, shiva):
         e1.reset_modifiers()
         e2.reset_modifiers()
 
         event = random.choice(self.events)
-        print(f"\n*** Cosmic Event: {event.name} - {event.description} ***")
+        self.logger(f"\n*** Cosmic Event: {event.name} - {event.description} ***")
 
     # Inspect the method signature
         apply_sig = inspect.signature(event.apply)

@@ -1,14 +1,7 @@
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
-import random
-import time
-from entity import Entity
-from priest import Priest
-from intern import Intern
-from mechanist import Mechanist
-from gods import get_all_gods
-from cosmic_event import CosmicEvent
+from war_engine import WarEngine
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -20,19 +13,13 @@ class WarGUI(ctk.CTk):
         self.geometry("1200x850")
         self.resizable(True, True)
 
-        self.gods = get_all_gods()
-        self.cosmic = CosmicEvent()
+        self.engine = WarEngine(logger=self.log)
 
         self.turn = 0
-        self.max_turns = 50
         self.running = False
 
-        self.entity1 = Priest("Guru Vyas", gods=self.gods, logger=self.log)
-        self.entity2 = Entity("Entity2", logger=self.log)
-        self.entity3 = Mechanist("Arthur 2.0", logger=self.log)
-        self.entity4 = Intern("Intern Greg", logger=self.log)
+        self.entities = self.engine.entities
 
-        self.entities = [self.entity1, self.entity2, self.entity3, self.entity4]
 
         self.build_ui()
         self.update_stats()
@@ -114,36 +101,18 @@ class WarGUI(ctk.CTk):
                 entity.stamina_text.configure(text=f"⚡ Stamina: {entity.stamina:.1f}/{entity.max_stamina}")
 
     def next_turn(self):
-        alive_entities = [e for e in self.entities if e.is_alive()]
-        if self.turn >= self.max_turns or len(alive_entities) <= 1:
+        if self.engine.is_over():
             self.end_battle()
             return
-
-        self.turn += 1
-        self.log(f"\n-- Turn {self.turn} --")
-        event = self.cosmic.apply_event(*self.entities[:2], *self.gods.values())
-        if event:
-            self.cosmic_label.configure(text=f"Cosmic Event: {event.name}")
-            self.log(f"*** Cosmic Event: {event.name} - {event.description} ***")
-
-        for entity in self.entities:
-            if not entity.is_alive():
-                continue
-            opponents = [e for e in self.entities if e != entity and e.is_alive()]
-            if opponents:
-                target = random.choice(opponents)
-                entity.take_turn(target)
-
-        favored_target = self.entity1
-        possible_targets = [e for e in self.entities if e != favored_target and e.is_alive()]
-        for god in self.gods.values():
-            if possible_targets:
-                god_opponent = random.choice(possible_targets)
-                god.influence_battle(favored_target, god_opponent)
+        
+        self.engine.step()
+        self.turn = self.engine.turn
+        if self.engine.current_event:
+            self.cosmic_label.configure(text=f"Cosmic Event: {self.engine.current_event.name}")
 
         self.update_stats()
 
-        if len([e for e in self.entities if e.is_alive()]) <= 1:
+        if self.engine.is_over():
             self.end_battle()
 
     def toggle_auto(self):
@@ -153,18 +122,14 @@ class WarGUI(ctk.CTk):
             self.run_auto()
 
     def run_auto(self):
-        if self.running and len([e for e in self.entities if e.is_alive()]) > 1:
+        if self.running and not self.engine.is_over():
             self.next_turn()
             self.after(1000, self.run_auto)
 
     def reset(self):
-        self.entity1 = Priest("High Priest Tenzin", gods=self.gods, logger=self.log)
-        self.entity2 = Entity("Entity2", logger=self.log)
-        self.entity3 = Mechanist("Arthur 2.0", logger=self.log)
-        self.entity4 = Intern("Intern Greg", logger=self.log)
-        self.entities = [self.entity1, self.entity2, self.entity3, self.entity4]
-
-        self.turn = 0
+        self.engine = WarEngine(logger=self.log)
+        self.entities = self.engine.entities
+        self.turn = self.engine.turn
         self.running = False
         self.log_box.delete("1.0", "end")
 
@@ -184,12 +149,13 @@ class WarGUI(ctk.CTk):
         alive = [e for e in self.entities if e.is_alive()]
         if len(alive) == 1:
             winner = alive[0].name
+            result = f"{winner} is victorious!"
         elif len(alive) == 0:
-            winner = "No one"
+            result = "No one survived."
         else:
-            winner = "No one (stalemate)"
-        self.log(f"\n*** {winner} wins after {self.turn} turns! ***")
-        messagebox.showinfo("Battle Over", f"{winner} is victorious!")
+            result = "No one (stalemate)."
+        self.log(f"\n*** {result} ***")
+        messagebox.showinfo("Battle Over", result)
 
 if __name__ == "__main__":
     app = WarGUI()
