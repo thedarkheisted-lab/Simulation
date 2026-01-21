@@ -1,6 +1,6 @@
 # vishnu.py
 import random
-from gods.brahma import get_priority_score
+from warsim.gods.brahma import get_priority_score
 
 class Vishnu:
     def __init__(self, logger=print):

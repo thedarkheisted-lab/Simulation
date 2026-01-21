@@ -1,5 +1,5 @@
 # intern.py
-from entity import Entity
+from .entity import Entity
 import random
 
 class Intern(Entity):

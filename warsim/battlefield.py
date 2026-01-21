@@ -1,12 +1,12 @@
 # battlefield.py
 import time, random
-from entity import Entity
-from priest import Priest
-from mechanist import Mechanist
-from intern import Intern
-from gods import get_all_gods
-from gods import Brahma, Vishnu, Shiva
-from cosmic_event import CosmicEvent
+from .entity import Entity
+from .priest import Priest
+from .mechanist import Mechanist
+from .intern import Intern
+from .gods import get_all_gods
+from .gods import Brahma, Vishnu, Shiva
+from .cosmic_event import CosmicEvent
 
 def print_status(entities, turn):
     print("\n" + "="*70)

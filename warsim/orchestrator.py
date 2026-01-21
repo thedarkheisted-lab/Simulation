@@ -1,16 +1,12 @@
 import argparse
-import random
+
 import re
 import sqlite3
 import time
 from pathlib import Path
+from .war_engine import WarEngine
 
-from cosmic_event import CosmicEvent
-from entity import Entity
-from gods import get_all_gods
-from intern import Intern
-from mechanist import Mechanist
-from priest import Priest
+
 
 
 class GregNotesLogger:
@@ -114,124 +110,18 @@ class GregNotesLogger:
         print(message)
 
 
-def _format_status(entities: list[Entity], turn: int) -> str:
-    header = [
-        "\n" + "=" * 70,
-        f"Turn {turn} Summary:",
-        "=" * 70,
-        f"{'Name':<15} | {'Health':>8} | {'Mana':>8} | {'Karma':>6} | {'Stamina':>8}",
-        "-" * 70,
-    ]
-    rows = [
-        f"{e.name:<15} | {e.health:8.1f} | {e.mana:8.1f} | {e.karma:6} | {e.stamina:8.1f}"
-        for e in entities
-    ]
-    footer = "=" * 70 + "\n"
-    return "\n".join(header + rows + [footer])
 
 
 def run_simulation(max_turns: int, delay: float, seed: int | None, db_path: Path) -> None:
-    if seed is not None:
-        random.seed(seed)
-
+ 
     logger = GregNotesLogger(db_path)
-    gods = get_all_gods(logger=logger)
-
-    config1 = {
-        "max_health": 120,
-        "attack": 25,
-        "defense": 8,
-        "healing_ability": 20,
-        "max_mana": 100,
-        "mana_cost": 25,
-        "special_attack_damage": 45,
-        "karma": 50,
-        "max_stamina": 100,
-        "accuracy": 0.8,
-        "evasion": 0.1,
-        "critical_chance": 0.15,
-        "logger": logger,
-    }
-    config2 = {
-        "max_health": 110,
-        "attack": 23,
-        "defense": 10,
-        "healing_ability": 18,
-        "max_mana": 110,
-        "mana_cost": 30,
-        "special_attack_damage": 40,
-        "karma": 50,
-        "max_stamina": 100,
-        "accuracy": 0.82,
-        "evasion": 0.12,
-        "critical_chance": 0.12,
-        "logger": logger,
-    }
-
-    entity1 = Priest("High Priest Tenzin", gods=gods, config=config1, logger=logger)
-    entity2 = Entity("Entity2", config=config2, logger=logger)
-    entity3 = Mechanist("Entity3", logger=logger)
-    entity4 = Intern("Intern Greg", logger=logger)
-
-    entities = [entity1, entity2, entity3, entity4]
-    brahma = gods["brahma"]
-    vishnu = gods["vishnu"]
-    shiva = gods["shiva"]
-    cosmic = CosmicEvent(logger=logger)
-
-    turn = 0
-    while len([e for e in entities if e.is_alive()]) > 1 and turn < max_turns:
-        turn += 1
-        logger.set_turn(turn)
-        logger.log_event(event_type="turn_start", context=f"Turn {turn} start.")
-        print(f"\n{'-' * 20} Turn {turn} {'-' * 20}\n")
-
-        cosmic.apply_event(entity1, entity2, brahma, vishnu, shiva)
-
-        for e in entities:
-            if not e.is_alive():
-                continue
-            opponents = [op for op in entities if op != e and op.is_alive()]
-            if opponents:
-                target = random.choice(opponents)
-                if isinstance(e, Priest) and turn % 4 == 0:
-                    e.ability(target)
-                else:
-                    e.take_turn(target)
-
-        favored = random.choices([entity1, entity2], weights=[0.6, 0.4])[0]
-        others = [e for e in entities if e != favored and e.is_alive()]
-        if others:
-            target = random.choice(others)
-            brahma.influence_battle(favored, target)
-            vishnu.influence_battle(favored, target)
-            shiva.influence_battle(favored, target)
-
-        if turn % 5 == 0:
-            if (
-                entity1.health < 50
-                and entity1.inventory.get("health_potion", 0) < 1
-                and entity2.inventory.get("health_potion", 0) > 0
-            ):
-                offer = {"mana_potion": 1}
-                request = {"health_potion": 1}
-                if entity1.propose_trade(entity2, offer, request):
-                    entity2.accept_trade(entity1, offer, request)
-
-        summary = _format_status(entities, turn)
-        print(summary)
-        logger.log_event(event_type="turn_summary", context=summary)
-
+    engine = WarEngine(logger=logger, seed=seed, max_turns=max_turns)
+    
+    while not engine.is_over():
+        logger.set_turn(engine.turn + 1)
+        engine.step()
         if delay > 0:
             time.sleep(delay)
-
-    alive = [e for e in entities if e.is_alive()]
-    if len(alive) == 1:
-        final_message = f"{alive[0].name} wins after {turn} turns!"
-    else:
-        final_message = "After 50 intense turns, the war ends in a stalemate!"
-    print(final_message)
-    logger.log_event(event_type="battle_end", context=final_message)
 
 
 def main() -> None:

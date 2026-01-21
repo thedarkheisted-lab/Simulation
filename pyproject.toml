@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "warsim"
+version = "0.1.0"
+description = "Cosmic war simulation engine"
+requires-python = ">=3.10"
+
+[tool.setuptools]
+packages = ["warsim"]

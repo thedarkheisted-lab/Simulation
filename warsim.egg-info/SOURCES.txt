@@ -1,0 +1,17 @@
+pyproject.toml
+warsim/Awareness.py
+warsim/attack_types.py
+warsim/battlefield.py
+warsim/cosmic_event.py
+warsim/entity.py
+warsim/entitywar.py
+warsim/intern.py
+warsim/mechanist.py
+warsim/orchestrator.py
+warsim/priest.py
+warsim/war_engine.py
+warsim/war_gui.py
+warsim.egg-info/PKG-INFO
+warsim.egg-info/SOURCES.txt
+warsim.egg-info/dependency_links.txt
+warsim.egg-info/top_level.txt

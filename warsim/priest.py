@@ -1,4 +1,4 @@
-from entity import Entity
+from .entity import Entity
 
 class Priest(Entity):
     def __init__(self, name, gods, logger=None):

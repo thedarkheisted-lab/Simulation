@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
-from war_engine import WarEngine
+from .war_engine import WarEngine
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")

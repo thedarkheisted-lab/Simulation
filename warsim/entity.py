@@ -1,5 +1,5 @@
 import random
-from attack_types import NormalAttack, HeavyAttack, QuickAttack, MagicAttack
+from .attack_types import NormalAttack, HeavyAttack, QuickAttack, MagicAttack
 
 def weighted_choice(choices):
     total = sum(weight for action, weight in choices)

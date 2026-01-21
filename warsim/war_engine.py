@@ -2,13 +2,12 @@ import random
 from dataclasses import dataclass
 from typing import Callable, List
 
-from cosmic_event import CosmicEvent
-from entity import Entity
-from gods import get_all_gods
-from intern import Intern
-from mechanist import Mechanist
-from priest import Priest
-
+from .cosmic_event import CosmicEvent
+from .entity import Entity
+from .gods import get_all_gods
+from .intern import Intern
+from .mechanist import Mechanist
+from .priest import Priest
 
 @dataclass
 class CosmicEventInfo:
@@ -31,6 +30,7 @@ class WarEngine:
         self.max_turns = max_turns
         self.turn = 0
         self.current_event: CosmicEventInfo | None = None
+        self.command_queue: list[dict] = []
 
         self.gods = get_all_gods(logger=self._log)
         self.cosmic = CosmicEvent(logger=self._log)
@@ -45,6 +45,49 @@ class WarEngine:
     def _log(self, message: str) -> None:
         self._events.append(message)
         self._logger(message)
+
+    def enqueue_command(self, command: dict) -> None:
+        self.command_queue.append(command)
+
+    def _apply_commands(self) -> None:
+        while self.command_queue:
+            cmd = self.command_queue.pop(0)
+            god = cmd.get("god", "Unknown")
+            effect = cmd.get("effect", "intervention")
+            target_name = cmd.get("target")
+            magnitude = cmd.get("magnitude", 0.0)
+
+            target = next((e for e in self.entities if e.name == target_name), None)
+            if not target:
+                self._log(f"{god} seeks {target_name}, but no such mortal answers.")
+                continue
+
+            if effect == "decay":
+                dmg = target.max_health * magnitude
+                target.take_damage(dmg)
+                self._log(
+                    f"{god} intervenes! {target.name} suffers divine decay ({dmg:.1f})."
+                )
+            elif effect == "heal":
+                heal = target.max_health * magnitude
+                before = target.health
+                target.health = min(target.max_health, target.health + heal)
+                actual = target.health - before
+                self._log(
+                    f"{god} intervenes! {target.name} is restored for {actual:.1f}."
+                )
+            elif effect == "mana":
+                mana = target.max_mana * magnitude
+                before = target.mana
+                target.mana = min(target.max_mana, target.mana + mana)
+                actual = target.mana - before
+                self._log(
+                    f"{god} intervenes! {target.name} gains {actual:.1f} mana."
+                )
+            else:
+                self._log(f"{god} sends a sign to {target.name}, but nothing manifests.")
+
+
 
     def _format_status(self) -> str:
         header = [
@@ -71,6 +114,7 @@ class WarEngine:
 
         self._events = []
         self.turn += 1
+        self._apply_commands()
         self._log(f"\n{'-' * 20} Turn {self.turn} {'-' * 20}\n")
 
         event = self.cosmic.apply_event(
